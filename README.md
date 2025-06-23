@@ -29,6 +29,12 @@ cd MediTEDNet-main
 pip install -r requirements.txt
 ```
 
+## 🏫 Affiliations
+
+1. College of Mathematics and Information Sciences, Hebei University, Baoding 071002, Hebei, China  
+2. Department of Endocrinology and Metabolism, Baoding No.1 Central Hospital, Baoding 071000, Hebei, China  
+3. Hebei Key Laboratory of Machine Learning and Computational Intelligence, Baoding 071002, Hebei, China
+
 ## ✨ Acknowledgments
 This work was supported by the Hebei Natural Science Foundation under Grant H2025201049.
 We also thank the authors of [VMamba](https://github.com/MzeroMiko/VMamba) for their open-source contributions.
