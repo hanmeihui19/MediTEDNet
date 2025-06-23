@@ -1,4 +1,4 @@
-# MediTEDNet: Visual State Space Model for Thyroid Eye Disease Classification
+# 📄 MediTEDNet: Visual State Space Model for Thyroid Eye Disease Classification
 
 ## 📌 Overview
 
@@ -20,3 +20,10 @@
 ## 🧠 Code
 
 Code and training scripts are available in this repository.
+
+### 🔧 Setup
+
+```bash
+git clone https://github.com/hanmeihui19/MediTEDNet.git
+cd MediTEDNet-main
+pip install -r requirements.txt
