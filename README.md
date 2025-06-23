@@ -37,4 +37,3 @@ pip install -r requirements.txt
 
 ## ✨ Acknowledgments
 This work was supported by the Hebei Natural Science Foundation under Grant H2025201049.
-We also thank the authors of [VMamba](https://github.com/MzeroMiko/VMamba) for their open-source contributions.
