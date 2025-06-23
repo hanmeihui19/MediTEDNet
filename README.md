@@ -27,6 +27,7 @@ Code and training scripts are available in this repository.
 git clone https://github.com/hanmeihui19/MediTEDNet.git
 cd MediTEDNet-main
 pip install -r requirements.txt
+```bash
 
 ## ✨ Acknowledgments
 
