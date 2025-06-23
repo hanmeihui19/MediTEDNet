@@ -1,14 +1,13 @@
-import time
 import math
 from functools import partial
-from typing import Optional, Callable
+from typing import Callable
 from torch import Tensor
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
-from einops import rearrange, repeat
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from einops import repeat
+from timm.models.layers import DropPath, trunc_normal_
 try:
     from mamba_ssm.ops.selective_scan_interface import selective_scan_fn, selective_scan_ref
 except:
@@ -95,7 +94,6 @@ class SS2D(nn.Module):
         self,
         d_model,
         d_state=16,
-        # d_state="auto", # 20240109
         d_conv=3,
         expand=2,
         dt_rank="auto",
@@ -115,7 +113,6 @@ class SS2D(nn.Module):
         super().__init__()
         self.d_model = d_model
         self.d_state = d_state
-        # self.d_state = math.ceil(self.d_model / 6) if d_state == "auto" else d_model # 20240109
         self.d_conv = d_conv
         self.expand = expand
         self.d_inner = int(self.expand * self.d_model)
@@ -346,7 +343,7 @@ class ChannelAttention(nn.Module):
             nn.Conv2d(in_planes // self.ratio, in_planes, 1, bias=False)
         )
         self.sigmoid = nn.Sigmoid()
-        self.apply(lambda m: m.to(device))  # 迁移所有参数到 GPU
+        self.apply(lambda m: m.to(device))
 
     def forward(self, x):
         x = x.to(self.device)
@@ -368,24 +365,19 @@ class SpatialAttention(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        x = x.to(self.device)  # 确保数据在 GPU 上
+        x = x.to(self.device)
         B, H, W, C = x.shape  # (B, H, W, C)
 
-        # 1. 变换为 (B, C, H, W) 格式
         x = x.permute(0, 3, 1, 2)  # (B, H, W, C) -> (B, C, H, W)
 
-        # 2. 计算通道的平均和最大特征
         avg_out = torch.mean(x, dim=1, keepdim=True)  # (B, 1, H, W)
         max_out, _ = torch.max(x, dim=1, keepdim=True)  # (B, 1, H, W)
 
-        # 3. 拼接两个特征图
         x = torch.cat([avg_out, max_out], dim=1)  # (B, 2, H, W)
 
-        # 4. 空间注意力卷积操作
         x = self.conv1(x)  # (B, 1, H, W)
         x = self.sigmoid(x)  # (B, 1, H, W)
 
-        # 5. 变换为 (B, H, W, 1) 格式
         x = x.permute(0, 2, 3, 1)  # (B, 1, H, W) -> (B, H, W, 1)
 
         return x
@@ -440,7 +432,7 @@ class Bi_Conv_VSS(nn.Module):
 
         output = torch.cat((output_conv,output_ssm),dim=-1)
 
-        output = self.ca(output) * output  # 逐元素相乘
+        output = self.ca(output) * output
         output = self.sa(output) * output
 
         output = channel_shuffle(output,groups=2)
@@ -550,7 +542,7 @@ class VSSM(nn.Module):
             layer = VSSLayer(
                 dim=dims[i_layer],
                 depth=depths[i_layer],
-                d_state=math.ceil(dims[0] / 6) if d_state is None else d_state, # 20240109
+                d_state=math.ceil(dims[0] / 6) if d_state is None else d_state,
                 drop=drop_rate, 
                 attn_drop=attn_drop_rate,
                 drop_path=dpr[sum(depths[:i_layer]):sum(depths[:i_layer + 1])],
@@ -562,8 +554,8 @@ class VSSM(nn.Module):
 
 
         # self.norm = norm_layer(self.num_features)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         # self.head = nn.Linear(self.num_features, num_classes) if num_classes > 0 else nn.Identity()
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = nn.Sequential(
             nn.Linear(1024, mid_fea),
             nn.ReLU(),
@@ -621,11 +613,11 @@ class VSSM(nn.Module):
         x = torch.flatten(x, start_dim=1)
 
         fea_classifier = self.classifier(x)
-        if self.training:  # 训练时返回 projector 和 classifier
+        if self.training:
             fea_projector = self.projector(x)
             fea_projector = F.normalize(fea_projector, dim=1)
             return fea_projector, fea_classifier
-        else:  # 测试和验证时只返回 classifier
+        else:
             return fea_classifier
         return fea_classifier
 
